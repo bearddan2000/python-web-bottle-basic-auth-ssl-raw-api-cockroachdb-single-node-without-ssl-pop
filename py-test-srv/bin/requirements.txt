@@ -1,0 +1,3 @@
+# for automated testing the api
+requests
+testify

@@ -1,0 +1,64 @@
+version: '3'
+services:
+  py-srv:
+    build: py-srv
+    ports:
+      - "80:8000"
+    depends_on:
+      - db-runner
+    links:
+      - "db:db"
+      
+  py-test-srv:
+    build:
+      context: py-test-srv
+    command: sh -c "/wait && python app.py"
+    environment:
+      - WAIT_HOSTS=py-srv:8000
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=30
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+    depends_on:
+      - py-srv
+    links:
+      - "py-srv:py-srv"
+
+  db:
+    image: cockroachdb/cockroach:v19.2.4
+    container_name: db
+    ports:
+     - "20000:26257"
+     - "8000:8080"
+    command: start --insecure
+
+  db_1:
+    image: cockroachdb/cockroach:v19.2.4
+    container_name: db_1
+    ports:
+     - "20001:26257"
+     - "8001:8080"
+    command: start --insecure --join=db
+
+  db_2:
+    image: cockroachdb/cockroach:v19.2.4
+    container_name: db_2
+    ports:
+     - "20002:26257"
+     - "8002:8080"
+    command: start --insecure --join=db
+
+  db-runner:
+    image: cockroachdb/cockroach:v19.2.4
+    command:
+      - shell
+      - /usr/local/bin/init-data.sh
+      - db:26257
+    volumes:
+     - ./db/init-data.sh:/usr/local/bin/init-data.sh:ro
+     - ./db/sql:/docker-entrypoint-initdb.d
+    depends_on:
+     - db
+     - db_1
+     - db_2
+    links:
+     - "db:db"

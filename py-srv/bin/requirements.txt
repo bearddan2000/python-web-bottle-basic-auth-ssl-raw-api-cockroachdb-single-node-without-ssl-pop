@@ -1,0 +1,12 @@
+bottle
+bottle-sqlalchemy
+sqlalchemy-cockroachdb
+psycopg2
+
+# for ssl
+cheroot
+
+# for logins
+beaker
+requests
+
